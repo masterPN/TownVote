@@ -2,13 +2,13 @@ package candidates
 
 import (
 	"context"
-	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func GetAllCandidates(db *mongo.Database, ctx context.Context) {
+func GetAllCandidates(db *mongo.Database, ctx context.Context) []primitive.M {
 	cadidatesCollection := db.Collection("candidates")
 
 	cursor, err := cadidatesCollection.Find(ctx, bson.M{})
@@ -19,5 +19,6 @@ func GetAllCandidates(db *mongo.Database, ctx context.Context) {
 	if err = cursor.All(ctx, &candidates); err != nil {
 		panic(err)
 	}
-	fmt.Println(candidates)
+
+	return candidates
 }
