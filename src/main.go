@@ -70,6 +70,13 @@ func main() {
 			res := candidates.GetCandidateDetail(voteDB, ctx, candidateID)
 			c.JSON(http.StatusOK, res)
 		})
+
+		api.POST("/candidates", func(c *gin.Context) {
+			var candidateInput candidates.Candidate
+			c.BindJSON(&candidateInput)
+			res := candidates.CreateCandidate(voteDB, ctx, candidateInput)
+			c.JSON(http.StatusOK, res)
+		})
 	}
 
 	router.Run()
