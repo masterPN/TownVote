@@ -10,10 +10,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const collectionStatName = "stat"
+const collectionStatusName = "status"
 const collectionName = "candidates"
 
-type Stat struct {
+type Status struct {
 	CandidateContinuouslyCount int32 `json:"candidateContinuouslyCount"`
 }
 type Candidates []struct {
@@ -76,7 +76,7 @@ func GetCandidateDetail(db *mongo.Database, ctx context.Context, candidateId str
 
 func CreateCandidate(db *mongo.Database, ctx context.Context, inputForm Candidate) (Candidate, error) {
 	candidatesCollection := db.Collection(collectionName)
-	statCollection := db.Collection(collectionStatName)
+	statusCollection := db.Collection(collectionStatusName)
 
 	// Check if found the same bioLink then abort
 	filter := bson.D{{"bioLink", inputForm.BioLink}}
@@ -89,13 +89,13 @@ func CreateCandidate(db *mongo.Database, ctx context.Context, inputForm Candidat
 	// Prepare form
 	// Get candidate continuously count
 	filter = bson.D{}
-	var resStat Stat
-	err = statCollection.FindOne(ctx, filter).Decode(&resStat)
+	var resStatus Status
+	err = statusCollection.FindOne(ctx, filter).Decode(&resStatus)
 	if err != nil {
 		return nilCandidate, err
 	}
 	// Insert form to collection
-	currentCount := resStat.CandidateContinuouslyCount + 1
+	currentCount := resStatus.CandidateContinuouslyCount + 1
 	insertResult, err := candidatesCollection.InsertOne(ctx, bson.D{
 		{Key: "id", Value: strconv.Itoa(int(currentCount))},
 		{Key: "name", Value: inputForm.Name},
@@ -111,14 +111,14 @@ func CreateCandidate(db *mongo.Database, ctx context.Context, inputForm Candidat
 	_ = insertResult
 
 	// If insert candidate success that update stat
-	filter = bson.D{{"candidateContinuouslyCount", resStat.CandidateContinuouslyCount}}
+	filter = bson.D{{"candidateContinuouslyCount", resStatus.CandidateContinuouslyCount}}
 	update := bson.M{
 		"$set": bson.M{
 			"candidateContinuouslyCount": currentCount,
 		},
 	}
-	var updateStat bson.D
-	err = statCollection.FindOneAndUpdate(ctx, filter, update).Decode(&updateStat)
+	var updateStatus bson.D
+	err = statusCollection.FindOneAndUpdate(ctx, filter, update).Decode(&updateStatus)
 	if err != nil {
 		return nilCandidate, err
 	}
