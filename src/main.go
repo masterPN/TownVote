@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -42,8 +41,7 @@ func main() {
 
 	router.GET("/api/candidates", func(c *gin.Context) {
 		res := candidates.GetAllCandidates(voteDB, ctx)
-		fmt.Println(res)
-		c.JSON(http.StatusOK, gin.H{"message": res})
+		c.JSON(http.StatusOK, res)
 	})
 
 	router.Run()
