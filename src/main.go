@@ -120,16 +120,31 @@ func main() {
 		api.POST("/vote/status", func(c *gin.Context) {
 			var bodyInput vote.VoteInput
 			c.BindJSON(&bodyInput)
-			res, err := vote.CheckVoteStatus(voteDB, ctx, bodyInput)
+			res, _, err := vote.CheckVoteStatus(voteDB, ctx, bodyInput)
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"status": false})
+				c.JSON(http.StatusInternalServerError, err)
 				panic(err)
 			}
-			if res == false {
+			if !res {
 				c.JSON(http.StatusOK, gin.H{"status": false})
 			}
-			if res == true {
+			if res {
 				c.JSON(http.StatusOK, gin.H{"status": true})
+			}
+		})
+
+		api.POST("/vote", func(c *gin.Context) {
+			var bodyInput vote.VoteInput
+			c.BindJSON(&bodyInput)
+			res, errMsg, err := vote.Vote(voteDB, ctx, bodyInput)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, err)
+			}
+			if !res {
+				c.JSON(http.StatusOK, gin.H{"status": "error", "message": errMsg})
+			}
+			if res {
+				c.JSON(http.StatusOK, gin.H{"status": "ok"})
 			}
 		})
 	}
