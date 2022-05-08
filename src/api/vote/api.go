@@ -7,7 +7,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-const collectionVoterName = "voter"
 const collectionStatusName = "status"
 const collectionResultName = "result"
 
@@ -20,7 +19,7 @@ type Status struct {
 }
 
 func CheckVoteStatus(db *mongo.Database, ctx context.Context, bodyInput VoteInput) (bool, string, error) {
-	voterCollection := db.Collection(collectionVoterName)
+	resultCollection := db.Collection(collectionResultName)
 	statusCollection := db.Collection(collectionStatusName)
 
 	// If the election stop count, then the voter can't vote.
@@ -37,7 +36,7 @@ func CheckVoteStatus(db *mongo.Database, ctx context.Context, bodyInput VoteInpu
 	// If the voter had already voted, then the voter can't vote.
 	filter = bson.D{{"nationalId", bodyInput.NationalId}}
 	var resFindVoter VoteInput
-	err = voterCollection.FindOne(ctx, filter).Decode(&resFindVoter)
+	err = resultCollection.FindOne(ctx, filter).Decode(&resFindVoter)
 	if err == nil {
 		return false, "Already voted", nil
 	}
