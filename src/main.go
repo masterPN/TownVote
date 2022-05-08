@@ -61,20 +61,48 @@ func main() {
 	api.Use(middleware.AuthorizeJWT())
 	{
 		api.GET("/candidates", func(c *gin.Context) {
-			res := candidates.GetAllCandidates(voteDB, ctx)
+			res, err := candidates.GetAllCandidates(voteDB, ctx)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, err)
+				panic(err)
+			}
 			c.JSON(http.StatusOK, res)
 		})
 
 		api.GET("/candidates/:candidateID", func(c *gin.Context) {
 			candidateID := c.Param("candidateID")
-			res := candidates.GetCandidateDetail(voteDB, ctx, candidateID)
+			res, err := candidates.GetCandidateDetail(voteDB, ctx, candidateID)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, err)
+				panic(err)
+			}
 			c.JSON(http.StatusOK, res)
 		})
 
 		api.POST("/candidates", func(c *gin.Context) {
-			var candidateInput candidates.Candidate
-			c.BindJSON(&candidateInput)
-			res := candidates.CreateCandidate(voteDB, ctx, candidateInput)
+			var bodyInput candidates.Candidate
+			c.BindJSON(&bodyInput)
+			res, err := candidates.CreateCandidate(voteDB, ctx, bodyInput)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, err)
+				panic(err)
+			}
+			c.JSON(http.StatusOK, res)
+		})
+
+		api.PUT("/candidates/:candidateID", func(c *gin.Context) {
+			var bodyInput candidates.Candidate
+			c.BindJSON(&bodyInput)
+			candidateID := c.Param("candidateID")
+			if candidateID != bodyInput.Id {
+				c.JSON(http.StatusBadRequest, "ID on Param and Body don't match.")
+				panic("ID on Param and Body don't match.")
+			}
+			res, err := candidates.UpdateCandidate(voteDB, ctx, bodyInput, candidateID)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, err)
+				panic(err)
+			}
 			c.JSON(http.StatusOK, res)
 		})
 	}

@@ -2,6 +2,7 @@ package candidates
 
 import (
 	"context"
+	"errors"
 	"strconv"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -34,22 +35,25 @@ type Candidate struct {
 	VotedCount int32  `json:"votedCount"`
 }
 
-func GetAllCandidates(db *mongo.Database, ctx context.Context) Candidates {
+var nilCandidates Candidates
+var nilCandidate Candidate
+
+func GetAllCandidates(db *mongo.Database, ctx context.Context) (Candidates, error) {
 	candidatesCollection := db.Collection(collectionName)
 
 	cursor, err := candidatesCollection.Find(ctx, bson.M{})
 	if err != nil {
-		panic(err)
+		return nilCandidates, err
 	}
 	var res Candidates
 	if err = cursor.All(ctx, &res); err != nil {
-		panic(err)
+		return nilCandidates, err
 	}
 
-	return res
+	return res, err
 }
 
-func GetCandidateDetail(db *mongo.Database, ctx context.Context, candidateId string) Candidate {
+func GetCandidateDetail(db *mongo.Database, ctx context.Context, candidateId string) (Candidate, error) {
 	candidatesCollection := db.Collection(collectionName)
 
 	filter := bson.D{{"id", candidateId}}
@@ -66,14 +70,11 @@ func GetCandidateDetail(db *mongo.Database, ctx context.Context, candidateId str
 
 	var res Candidate
 	err := candidatesCollection.FindOne(ctx, filter, opts).Decode(&res)
-	if err != nil {
-		panic(err)
-	}
 
-	return res
+	return res, err
 }
 
-func CreateCandidate(db *mongo.Database, ctx context.Context, inputForm Candidate) Candidate {
+func CreateCandidate(db *mongo.Database, ctx context.Context, inputForm Candidate) (Candidate, error) {
 	candidatesCollection := db.Collection(collectionName)
 	statCollection := db.Collection(collectionStatName)
 
@@ -82,7 +83,7 @@ func CreateCandidate(db *mongo.Database, ctx context.Context, inputForm Candidat
 	var resCheck Candidate
 	err := candidatesCollection.FindOne(ctx, filter).Decode(&resCheck)
 	if err == nil {
-		panic("duplicate bio link")
+		return nilCandidate, errors.New("duplicate bio link")
 	}
 
 	// Prepare form
@@ -91,7 +92,7 @@ func CreateCandidate(db *mongo.Database, ctx context.Context, inputForm Candidat
 	var resStat Stat
 	err = statCollection.FindOne(ctx, filter).Decode(&resStat)
 	if err != nil {
-		panic(err)
+		return nilCandidate, err
 	}
 	// Insert form to collection
 	currentCount := resStat.CandidateContinuouslyCount + 1
@@ -105,7 +106,7 @@ func CreateCandidate(db *mongo.Database, ctx context.Context, inputForm Candidat
 		{Key: "votedCount", Value: 0},
 	})
 	if err != nil {
-		panic(err)
+		return nilCandidate, err
 	}
 	_ = insertResult
 
@@ -119,10 +120,36 @@ func CreateCandidate(db *mongo.Database, ctx context.Context, inputForm Candidat
 	var updateStat bson.D
 	err = statCollection.FindOneAndUpdate(ctx, filter, update).Decode(&updateStat)
 	if err != nil {
-		panic(err)
+		return nilCandidate, err
 	}
 
 	return GetCandidateDetail(db, ctx, strconv.Itoa(int(currentCount)))
+}
 
-	// fmt.Println(insertResult)
+func UpdateCandidate(db *mongo.Database, ctx context.Context, bodyInput Candidate, candidateID string) (Candidate, error) {
+	// Check if the candidate is store in DB
+	_, err := GetCandidateDetail(db, ctx, candidateID)
+	if err != nil {
+		return nilCandidate, err
+	}
+
+	// Update the candidate
+	candidatesCollection := db.Collection(collectionName)
+	filter := bson.D{{"id", candidateID}}
+	update := bson.M{
+		"$set": bson.M{
+			"name":      bodyInput.Name,
+			"dob":       bodyInput.Dob,
+			"bioLink":   bodyInput.BioLink,
+			"imageLink": bodyInput.ImageLink,
+			"policy":    bodyInput.Policy,
+		},
+	}
+	var updateCandidateRes bson.D
+	err = candidatesCollection.FindOneAndUpdate(ctx, filter, update).Decode(&updateCandidateRes)
+	if err != nil {
+		return nilCandidate, err
+	}
+
+	return GetCandidateDetail(db, ctx, candidateID)
 }
