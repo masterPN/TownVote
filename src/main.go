@@ -10,6 +10,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"LineTownVote/api/candidates"
+	"LineTownVote/controller"
+	"LineTownVote/service"
 )
 
 // Connection URI
@@ -38,6 +40,21 @@ func main() {
 	router.SetTrustedProxies([]string{"127.0.0.1"})
 
 	router.GET("/", GetTest)
+
+	// JWT
+	var loginService service.LoginService = service.StaticLoginService()
+	var jwtService service.JWTService = service.JWTAuthService()
+	var loginController controller.LoginController = controller.LoginHandler(loginService, jwtService)
+	router.POST("/get_token", func(c *gin.Context) {
+		token := loginController.Login(c)
+		if token != "" {
+			c.JSON(http.StatusOK, gin.H{
+				"token": token,
+			})
+		} else {
+			c.JSON(http.StatusUnauthorized, nil)
+		}
+	})
 
 	router.GET("/api/candidates", func(c *gin.Context) {
 		res := candidates.GetAllCandidates(voteDB, ctx)
