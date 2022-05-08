@@ -153,3 +153,11 @@ func UpdateCandidate(db *mongo.Database, ctx context.Context, bodyInput Candidat
 
 	return GetCandidateDetail(db, ctx, candidateID)
 }
+
+func DeleteCandidate(db *mongo.Database, ctx context.Context, candidateID string) error {
+	filter := bson.D{{"id", candidateID}}
+	var deleteCandidateRes bson.D
+	err := db.Collection(collectionName).FindOneAndDelete(ctx, filter).Decode(&deleteCandidateRes)
+
+	return err
+}

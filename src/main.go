@@ -105,6 +105,16 @@ func main() {
 			}
 			c.JSON(http.StatusOK, res)
 		})
+
+		api.DELETE("/candidates/:candidateID", func(c *gin.Context) {
+			candidateID := c.Param("candidateID")
+			err := candidates.DeleteCandidate(voteDB, ctx, candidateID)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Candidate not found"})
+				panic(err)
+			}
+			c.JSON(http.StatusOK, gin.H{"status": "ok"})
+		})
 	}
 
 	router.Run()
