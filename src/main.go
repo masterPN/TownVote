@@ -64,6 +64,12 @@ func main() {
 			res := candidates.GetAllCandidates(voteDB, ctx)
 			c.JSON(http.StatusOK, res)
 		})
+
+		api.GET("/candidates/:candidateID", func(c *gin.Context) {
+			candidateID := c.Param("candidateID")
+			res := candidates.GetCandidateDetail(voteDB, ctx, candidateID)
+			c.JSON(http.StatusOK, res)
+		})
 	}
 
 	router.Run()
