@@ -12,6 +12,7 @@ import (
 
 const collectionStatusName = "status"
 const collectionName = "candidates"
+const collectionResultName = "result"
 
 type Status struct {
 	CandidateContinuouslyCount int32 `json:"candidateContinuouslyCount"`
@@ -24,6 +25,7 @@ type Candidates []struct {
 	ImageLink  string `json:"imageLink"`
 	Policy     string `json:"policy"`
 	VotedCount int32  `json:"votedCount"`
+	Percentage string `json:"percentage"`
 }
 type Candidate struct {
 	Id         string `json:"id"`
@@ -35,19 +37,31 @@ type Candidate struct {
 	VotedCount int32  `json:"votedCount"`
 }
 
-var nilCandidates Candidates
+var NilCandidates Candidates
 var nilCandidate Candidate
 
 func GetAllCandidates(db *mongo.Database, ctx context.Context) (Candidates, error) {
 	candidatesCollection := db.Collection(collectionName)
+	resultCollection := db.Collection(collectionResultName)
 
 	cursor, err := candidatesCollection.Find(ctx, bson.M{})
 	if err != nil {
-		return nilCandidates, err
+		return NilCandidates, err
 	}
 	var res Candidates
 	if err = cursor.All(ctx, &res); err != nil {
-		return nilCandidates, err
+		return NilCandidates, err
+	}
+
+	// Count votes
+	for i := 0; i < len(res); i++ {
+		currentId, err := strconv.Atoi(res[i].Id)
+		filter := bson.D{{"candidateId", currentId}}
+		currentCount, err := resultCollection.CountDocuments(ctx, filter)
+		if err != nil {
+			currentCount = 0
+		}
+		res[i].VotedCount = int32(currentCount)
 	}
 
 	return res, err

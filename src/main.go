@@ -159,6 +159,15 @@ func main() {
 				c.JSON(http.StatusOK, gin.H{"status": "ok", "enable": bodyInput.Enable})
 			}
 		})
+
+		api.GET("/election/result", func(c *gin.Context) {
+			res, err := vote.GetResult(voteDB, ctx)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, err)
+				panic(err)
+			}
+			c.JSON(http.StatusOK, res)
+		})
 	}
 
 	router.Run()
