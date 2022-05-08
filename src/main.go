@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"LineTownVote/api/candidates"
+	"LineTownVote/api/vote"
 	"LineTownVote/controller"
 	"LineTownVote/middleware"
 	"LineTownVote/service"
@@ -114,6 +115,22 @@ func main() {
 				panic(err)
 			}
 			c.JSON(http.StatusOK, gin.H{"status": "ok"})
+		})
+
+		api.POST("/vote/status", func(c *gin.Context) {
+			var bodyInput vote.VoteInput
+			c.BindJSON(&bodyInput)
+			res, err := vote.CheckVoteStatus(voteDB, ctx, bodyInput)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"status": false})
+				panic(err)
+			}
+			if res == false {
+				c.JSON(http.StatusOK, gin.H{"status": false})
+			}
+			if res == true {
+				c.JSON(http.StatusOK, gin.H{"status": true})
+			}
 		})
 	}
 
