@@ -11,6 +11,7 @@ import (
 
 	"LineTownVote/api/candidates"
 	"LineTownVote/controller"
+	"LineTownVote/middleware"
 	"LineTownVote/service"
 )
 
@@ -56,10 +57,14 @@ func main() {
 		}
 	})
 
-	router.GET("/api/candidates", func(c *gin.Context) {
-		res := candidates.GetAllCandidates(voteDB, ctx)
-		c.JSON(http.StatusOK, res)
-	})
+	api := router.Group("/api")
+	api.Use(middleware.AuthorizeJWT())
+	{
+		api.GET("/candidates", func(c *gin.Context) {
+			res := candidates.GetAllCandidates(voteDB, ctx)
+			c.JSON(http.StatusOK, res)
+		})
+	}
 
 	router.Run()
 
