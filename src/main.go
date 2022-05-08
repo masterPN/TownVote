@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"LineTownVote/api/candidates"
+	"LineTownVote/api/settings"
 	"LineTownVote/api/vote"
 	"LineTownVote/controller"
 	"LineTownVote/middleware"
@@ -145,6 +146,17 @@ func main() {
 			}
 			if res {
 				c.JSON(http.StatusOK, gin.H{"status": "ok"})
+			}
+		})
+
+		api.POST("/election/toggle", func(c *gin.Context) {
+			var bodyInput settings.Toggle
+			c.BindJSON(&bodyInput)
+			err := settings.ToggleElection(voteDB, ctx, bodyInput)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, err)
+			} else {
+				c.JSON(http.StatusOK, gin.H{"status": "ok", "enable": bodyInput.Enable})
 			}
 		})
 	}
