@@ -8,7 +8,7 @@ import (
 )
 
 type JWTService interface {
-	GenerateToken(id_no string, id_name string) string
+	GenerateToken(id_no string, id_laserCode string) string
 	ValidateToken(token string) (*jwt.Token, error)
 }
 type jwtServices struct {
@@ -16,8 +16,8 @@ type jwtServices struct {
 	issure    string
 }
 type authCustomClaims struct {
-	Id_no   string `json:"id_no"`
-	Id_name string `json:"id_name"`
+	Id_no        string `json:"id_no"`
+	Id_laserCode string `json:"id_laserCode"`
 	jwt.StandardClaims
 }
 
@@ -28,10 +28,10 @@ func JWTAuthService() JWTService {
 	}
 }
 
-func (service *jwtServices) GenerateToken(id_no string, id_name string) string {
+func (service *jwtServices) GenerateToken(id_no string, id_laserCode string) string {
 	claims := &authCustomClaims{
 		id_no,
-		id_name,
+		id_laserCode,
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(10 * 24 * time.Hour).Unix(),
 			Issuer:    service.issure,

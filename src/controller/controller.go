@@ -30,9 +30,9 @@ func (controller *loginController) Login(ctx *gin.Context) string {
 	if err != nil {
 		return "no data found"
 	}
-	isUserAuthenticated := controller.loginService.LoginUser(credential.Id_no, credential.Id_name)
+	isUserAuthenticated := controller.loginService.LoginUser(credential.Id_no, credential.Id_laserCode)
 	if isUserAuthenticated {
-		return controller.jWtService.GenerateToken(credential.Id_no, credential.Id_name)
+		return controller.jWtService.GenerateToken(credential.Id_no, credential.Id_laserCode)
 	}
 	return ""
 }
