@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"LineTownVote/api/candidates"
-	"LineTownVote/api/settings"
+	"LineTownVote/api/election"
 	"LineTownVote/api/vote"
 	"LineTownVote/controller"
 	"LineTownVote/middleware"
@@ -19,10 +19,6 @@ import (
 
 // Connection URI
 const uri = "mongodb://localhost:27017"
-
-func GetTest(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "The is a message from voter!"})
-}
 
 func main() {
 	// Set MongoDB router
@@ -41,8 +37,6 @@ func main() {
 	// Set root api router
 	router := gin.Default()
 	router.SetTrustedProxies([]string{"127.0.0.1"})
-
-	router.GET("/", GetTest)
 
 	// JWT
 	var loginService service.LoginService = service.StaticLoginService()
@@ -150,9 +144,9 @@ func main() {
 		})
 
 		api.POST("/election/toggle", func(c *gin.Context) {
-			var bodyInput settings.Toggle
+			var bodyInput election.Toggle
 			c.BindJSON(&bodyInput)
-			err := settings.ToggleElection(voteDB, ctx, bodyInput)
+			err := election.ToggleElection(voteDB, ctx, bodyInput)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, err)
 			} else {
@@ -161,7 +155,7 @@ func main() {
 		})
 
 		api.GET("/election/result", func(c *gin.Context) {
-			res, err := vote.GetResult(voteDB, ctx)
+			res, err := election.GetResult(voteDB, ctx)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, err)
 				panic(err)
