@@ -15,6 +15,7 @@ import (
 	"LineTownVote/controller"
 	"LineTownVote/middleware"
 	"LineTownVote/service"
+	"LineTownVote/websocket_mod"
 )
 
 // Connection URI
@@ -176,6 +177,10 @@ func main() {
 			c.FileAttachment(targetPath, fileName)
 		})
 	}
+
+	router.GET("/ws/results/:candidateID", func(c *gin.Context) {
+		websocket_mod.Handler(c, voteDB, ctx)
+	})
 
 	router.Run()
 
