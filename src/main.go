@@ -59,59 +59,23 @@ func main() {
 	api.Use(middleware.AuthorizeJWT())
 	{
 		api.GET("/candidates", func(c *gin.Context) {
-			res, err := candidates.GetAllCandidates(voteDB, ctx)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, err)
-				panic(err)
-			}
-			c.JSON(http.StatusOK, res)
+			candidates.APIGetCandidatesHandler(c, voteDB, ctx)
 		})
 
 		api.GET("/candidates/:candidateID", func(c *gin.Context) {
-			candidateID := c.Param("candidateID")
-			res, err := candidates.GetCandidateDetail(voteDB, ctx, candidateID)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, err)
-				panic(err)
-			}
-			c.JSON(http.StatusOK, res)
+			candidates.APIGetCandidateDetailHandler(c, voteDB, ctx)
 		})
 
 		api.POST("/candidates", func(c *gin.Context) {
-			var bodyInput candidates.Candidate
-			c.BindJSON(&bodyInput)
-			res, err := candidates.CreateCandidate(voteDB, ctx, bodyInput)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, err)
-				panic(err)
-			}
-			c.JSON(http.StatusOK, res)
+			candidates.APIPostCreateCandidateHandler(c, voteDB, ctx)
 		})
 
 		api.PUT("/candidates/:candidateID", func(c *gin.Context) {
-			var bodyInput candidates.Candidate
-			c.BindJSON(&bodyInput)
-			candidateID := c.Param("candidateID")
-			if candidateID != bodyInput.Id {
-				c.JSON(http.StatusBadRequest, "ID on Param and Body don't match.")
-				panic("ID on Param and Body don't match.")
-			}
-			res, err := candidates.UpdateCandidate(voteDB, ctx, bodyInput, candidateID)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, err)
-				panic(err)
-			}
-			c.JSON(http.StatusOK, res)
+			candidates.APIPutUpdateCandidateHandler(c, voteDB, ctx)
 		})
 
 		api.DELETE("/candidates/:candidateID", func(c *gin.Context) {
-			candidateID := c.Param("candidateID")
-			err := candidates.DeleteCandidate(voteDB, ctx, candidateID)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Candidate not found"})
-				panic(err)
-			}
-			c.JSON(http.StatusOK, gin.H{"status": "ok"})
+			candidates.APIDeleteCandidateHandler(c, voteDB, ctx)
 		})
 
 		api.POST("/vote/status", func(c *gin.Context) {

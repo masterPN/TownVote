@@ -3,8 +3,10 @@ package candidates
 import (
 	"context"
 	"errors"
+	"net/http"
 	"strconv"
 
+	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -184,4 +186,60 @@ func DeleteCandidate(db *mongo.Database, ctx context.Context, candidateID string
 	err := db.Collection(collectionName).FindOneAndDelete(ctx, filter).Decode(&deleteCandidateRes)
 
 	return err
+}
+
+func APIGetCandidatesHandler(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
+	res, err := GetAllCandidates(voteDB, ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		panic(err)
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func APIGetCandidateDetailHandler(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
+	candidateID := c.Param("candidateID")
+	res, err := GetCandidateDetail(voteDB, ctx, candidateID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		panic(err)
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func APIPostCreateCandidateHandler(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
+	var bodyInput Candidate
+	c.BindJSON(&bodyInput)
+	res, err := CreateCandidate(voteDB, ctx, bodyInput)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		panic(err)
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func APIPutUpdateCandidateHandler(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
+	var bodyInput Candidate
+	c.BindJSON(&bodyInput)
+	candidateID := c.Param("candidateID")
+	if candidateID != bodyInput.Id {
+		c.JSON(http.StatusBadRequest, "ID on Param and Body don't match.")
+		panic("ID on Param and Body don't match.")
+	}
+	res, err := UpdateCandidate(voteDB, ctx, bodyInput, candidateID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		panic(err)
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func APIDeleteCandidateHandler(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
+	candidateID := c.Param("candidateID")
+	err := DeleteCandidate(voteDB, ctx, candidateID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Candidate not found"})
+		panic(err)
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
