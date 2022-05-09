@@ -57,7 +57,7 @@ func main() {
 	api.Use(middleware.AuthorizeJWT())
 	{
 		api.GET("/candidates", func(c *gin.Context) {
-			res, err := candidates.GetAllCandidates(voteDB, ctx)
+			res, err := candidates.GetAllCandidates(voteDB, ctx, false)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, err)
 				panic(err)

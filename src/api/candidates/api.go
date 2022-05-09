@@ -25,7 +25,7 @@ type Candidates []struct {
 	ImageLink  string `json:"imageLink"`
 	Policy     string `json:"policy"`
 	VotedCount int32  `json:"votedCount"`
-	Percentage string `json:"percentage"`
+	Percentage string `json:"percentage,omitempty"`
 }
 type Candidate struct {
 	Id         string `json:"id"`
@@ -40,7 +40,7 @@ type Candidate struct {
 var NilCandidates Candidates
 var nilCandidate Candidate
 
-func GetAllCandidates(db *mongo.Database, ctx context.Context) (Candidates, error) {
+func GetAllCandidates(db *mongo.Database, ctx context.Context, isGetPercentage bool) (Candidates, error) {
 	candidatesCollection := db.Collection(collectionName)
 	resultCollection := db.Collection(collectionResultName)
 
@@ -54,14 +54,16 @@ func GetAllCandidates(db *mongo.Database, ctx context.Context) (Candidates, erro
 	}
 
 	// Count votes
-	for i := 0; i < len(res); i++ {
-		currentId, err := strconv.Atoi(res[i].Id)
-		filter := bson.D{{"candidateId", currentId}}
-		currentCount, err := resultCollection.CountDocuments(ctx, filter)
-		if err != nil {
-			currentCount = 0
+	if isGetPercentage {
+		for i := 0; i < len(res); i++ {
+			currentId, err := strconv.Atoi(res[i].Id)
+			filter := bson.D{{"candidateId", currentId}}
+			currentCount, err := resultCollection.CountDocuments(ctx, filter)
+			if err != nil {
+				currentCount = 0
+			}
+			res[i].VotedCount = int32(currentCount)
 		}
-		res[i].VotedCount = int32(currentCount)
 	}
 
 	return res, err
