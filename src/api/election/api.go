@@ -4,9 +4,12 @@ import (
 	"LineTownVote/api/candidates"
 	"context"
 	"encoding/csv"
+	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 
+	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -93,4 +96,35 @@ func GetCSVExport(db *mongo.Database, ctx context.Context) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func APIPostToggle(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
+	var bodyInput Toggle
+	c.BindJSON(&bodyInput)
+	err := ToggleElection(voteDB, ctx, bodyInput)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+	} else {
+		c.JSON(http.StatusOK, gin.H{"status": "ok", "enable": bodyInput.Enable})
+	}
+}
+
+func APIGetResult(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
+	res, err := GetResult(voteDB, ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		panic(err)
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func APIGetExport(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
+	GetCSVExport(voteDB, ctx)
+	fileName := "results.csv"
+	targetPath := filepath.Join("./", fileName)
+	c.Header("Content-Description", "File Transfer")
+	c.Header("Content-Transfer-Encoding", "binary")
+	c.Header("Content-Disposition", "attachment; filename="+fileName)
+	c.Header("Content-Type", "text/csv")
+	c.FileAttachment(targetPath, fileName)
 }

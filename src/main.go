@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"net/http"
-	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -87,35 +86,15 @@ func main() {
 		})
 
 		api.POST("/election/toggle", func(c *gin.Context) {
-			var bodyInput election.Toggle
-			c.BindJSON(&bodyInput)
-			err := election.ToggleElection(voteDB, ctx, bodyInput)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, err)
-			} else {
-				c.JSON(http.StatusOK, gin.H{"status": "ok", "enable": bodyInput.Enable})
-			}
+			election.APIPostToggle(c, voteDB, ctx)
 		})
 
 		api.GET("/election/result", func(c *gin.Context) {
-			res, err := election.GetResult(voteDB, ctx)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, err)
-				panic(err)
-			}
-			c.JSON(http.StatusOK, res)
+			election.APIGetResult(c, voteDB, ctx)
 		})
 
 		api.GET("/election/export", func(c *gin.Context) {
-			election.GetCSVExport(voteDB, ctx)
-			// c.FileAttachment("./results.csv", "results.csv")
-			fileName := "results.csv"
-			targetPath := filepath.Join("./", fileName)
-			c.Header("Content-Description", "File Transfer")
-			c.Header("Content-Transfer-Encoding", "binary")
-			c.Header("Content-Disposition", "attachment; filename="+fileName)
-			c.Header("Content-Type", "text/csv")
-			c.FileAttachment(targetPath, fileName)
+			election.APIGetExport(c, voteDB, ctx)
 		})
 	}
 
