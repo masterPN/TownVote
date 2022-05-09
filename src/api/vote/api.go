@@ -2,7 +2,9 @@ package vote
 
 import (
 	"context"
+	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -70,4 +72,35 @@ func Vote(db *mongo.Database, ctx context.Context, bodyInput VoteInput) (bool, s
 
 	// Save success
 	return true, "", nil
+}
+
+func APIPostCheckStatusHandler(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
+	var bodyInput VoteInput
+	c.BindJSON(&bodyInput)
+	res, _, err := CheckVoteStatus(voteDB, ctx, bodyInput)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		panic(err)
+	}
+	if !res {
+		c.JSON(http.StatusOK, gin.H{"status": false})
+	}
+	if res {
+		c.JSON(http.StatusOK, gin.H{"status": true})
+	}
+}
+
+func APIPostVote(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
+	var bodyInput VoteInput
+	c.BindJSON(&bodyInput)
+	res, errMsg, err := Vote(voteDB, ctx, bodyInput)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+	}
+	if !res {
+		c.JSON(http.StatusOK, gin.H{"status": "error", "message": errMsg})
+	}
+	if res {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	}
 }
