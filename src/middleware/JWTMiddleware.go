@@ -2,10 +2,8 @@ package middleware
 
 import (
 	"LineTownVote/service"
-	"fmt"
 	"net/http"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,10 +14,10 @@ func AuthorizeJWT() gin.HandlerFunc {
 		tokenString := authHeader[len(BEARER_SCHEMA):]
 		token, err := service.JWTAuthService().ValidateToken(tokenString)
 		if token.Valid {
-			claims := token.Claims.(jwt.MapClaims)
-			fmt.Println(claims)
+			// claims := token.Claims.(jwt.MapClaims)
+			// fmt.Println(claims)
 		} else {
-			fmt.Println(err)
+			_ = err
 			c.AbortWithStatus(http.StatusUnauthorized)
 		}
 	}
