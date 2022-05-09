@@ -42,7 +42,7 @@ func ToggleElection(db *mongo.Database, ctx context.Context, bodyInput Toggle) e
 
 func GetResult(db *mongo.Database, ctx context.Context) (candidates.Candidates, error) {
 	// Get all candidates' detail
-	results, err := candidates.GetAllCandidates(db, ctx, true)
+	results, err := candidates.GetAllCandidates(db, ctx)
 	if err != nil {
 		return candidates.NilCandidates, err
 	}

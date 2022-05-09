@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"net/http"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -57,7 +58,7 @@ func main() {
 	api.Use(middleware.AuthorizeJWT())
 	{
 		api.GET("/candidates", func(c *gin.Context) {
-			res, err := candidates.GetAllCandidates(voteDB, ctx, false)
+			res, err := candidates.GetAllCandidates(voteDB, ctx)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, err)
 				panic(err)
@@ -165,7 +166,14 @@ func main() {
 
 		api.GET("/election/export", func(c *gin.Context) {
 			election.GetCSVExport(voteDB, ctx)
-			c.FileAttachment("./results.csv", "results.csv")
+			// c.FileAttachment("./results.csv", "results.csv")
+			fileName := "results.csv"
+			targetPath := filepath.Join("./", fileName)
+			c.Header("Content-Description", "File Transfer")
+			c.Header("Content-Transfer-Encoding", "binary")
+			c.Header("Content-Disposition", "attachment; filename="+fileName)
+			c.Header("Content-Type", "text/csv")
+			c.FileAttachment(targetPath, fileName)
 		})
 	}
 
