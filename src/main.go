@@ -54,6 +54,7 @@ func main() {
 		}
 	})
 
+	// API
 	api := router.Group("/api")
 	api.Use(middleware.AuthorizeJWT())
 	{
@@ -98,6 +99,7 @@ func main() {
 		})
 	}
 
+	// Websocket
 	router.GET("/ws/results/:candidateID", func(c *gin.Context) {
 		websocket_mod.Handler(c, voteDB, ctx)
 	})
