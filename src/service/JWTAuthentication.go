@@ -33,7 +33,7 @@ func (service *jwtServices) GenerateToken(id_no string, id_name string) string {
 		id_no,
 		id_name,
 		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(48 * time.Hour).Unix(),
+			ExpiresAt: time.Now().Add(10 * 24 * time.Hour).Unix(),
 			Issuer:    service.issure,
 			IssuedAt:  time.Now().Unix(),
 		},

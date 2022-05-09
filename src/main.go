@@ -17,12 +17,9 @@ import (
 	"LineTownVote/websocket_mod"
 )
 
-// Connection URI
-const uri = "mongodb://localhost:27017"
-
 func main() {
 	// Set MongoDB router
-	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
 	if err != nil {
 		panic(err)
 	}

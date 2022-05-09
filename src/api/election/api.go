@@ -103,7 +103,7 @@ func APIPostToggle(c *gin.Context, voteDB *mongo.Database, ctx context.Context) 
 	c.BindJSON(&bodyInput)
 	err := ToggleElection(voteDB, ctx, bodyInput)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
+		c.JSON(http.StatusBadRequest, err)
 	} else {
 		c.JSON(http.StatusOK, gin.H{"status": "ok", "enable": bodyInput.Enable})
 	}

@@ -3,8 +3,10 @@ package candidates
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -87,6 +89,9 @@ func GetCandidateDetail(db *mongo.Database, ctx context.Context, candidateId str
 
 	var res Candidate
 	err := candidatesCollection.FindOne(ctx, filter, opts).Decode(&res)
+	if err != nil {
+		return nilCandidate, err
+	}
 
 	// Count votes
 	currentId, _ := strconv.Atoi(res.Id)
@@ -188,6 +193,7 @@ func DeleteCandidate(db *mongo.Database, ctx context.Context, candidateID string
 	return err
 }
 
+// API Handler
 func APIGetCandidatesHandler(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
 	res, err := GetAllCandidates(voteDB, ctx)
 	if err != nil {
@@ -199,6 +205,14 @@ func APIGetCandidatesHandler(c *gin.Context, voteDB *mongo.Database, ctx context
 
 func APIGetCandidateDetailHandler(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
 	candidateID := c.Param("candidateID")
+	num, _ := strconv.Atoi(candidateID)
+	compareParam := strings.Compare(strconv.Itoa(num), candidateID)
+	if compareParam != 0 {
+		c.JSON(http.StatusBadRequest, "")
+		fmt.Println("das")
+		return
+	}
+
 	res, err := GetCandidateDetail(voteDB, ctx, candidateID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
