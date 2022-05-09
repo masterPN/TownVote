@@ -69,6 +69,7 @@ func GetAllCandidates(db *mongo.Database, ctx context.Context) (Candidates, erro
 
 func GetCandidateDetail(db *mongo.Database, ctx context.Context, candidateId string) (Candidate, error) {
 	candidatesCollection := db.Collection(collectionName)
+	resultCollection := db.Collection(collectionResultName)
 
 	filter := bson.D{{"id", candidateId}}
 	projection := bson.D{
@@ -84,6 +85,15 @@ func GetCandidateDetail(db *mongo.Database, ctx context.Context, candidateId str
 
 	var res Candidate
 	err := candidatesCollection.FindOne(ctx, filter, opts).Decode(&res)
+
+	// Count votes
+	currentId, _ := strconv.Atoi(res.Id)
+	filter = bson.D{{"candidateId", currentId}}
+	currentCount, err := resultCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		currentCount = 0
+	}
+	res.VotedCount = int32(currentCount)
 
 	return res, err
 }
