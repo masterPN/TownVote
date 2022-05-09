@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -26,7 +25,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	// ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	var ctx context.Context
 	err = client.Connect(ctx)
 	if err != nil {
 		panic(err)
