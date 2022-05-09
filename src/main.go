@@ -162,6 +162,11 @@ func main() {
 			}
 			c.JSON(http.StatusOK, res)
 		})
+
+		api.GET("/election/export", func(c *gin.Context) {
+			election.GetCSVExport(voteDB, ctx)
+			c.FileAttachment("./results.csv", "results.csv")
+		})
 	}
 
 	router.Run()
