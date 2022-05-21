@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -31,6 +32,15 @@ func main() {
 	}
 	defer client.Disconnect(ctx)
 	voteDB := client.Database("LineTownVoteDB")
+
+	// If collection status is empty, then init status
+	statusCount, _ := voteDB.Collection("status").CountDocuments(ctx, bson.D{})
+	if statusCount == 0 {
+		_, _ = voteDB.Collection("status").InsertOne(ctx, bson.D{
+			{Key: "candidateContinuouslyCount", Value: 0},
+			{Key: "voteToggle", Value: false},
+		})
+	}
 
 	// Set root api router
 	router := gin.Default()
