@@ -2,6 +2,7 @@ package election
 
 import (
 	"LineTownVote/api/candidates"
+	"LineTownVote/model"
 	"context"
 	"encoding/csv"
 	"net/http"
@@ -43,7 +44,7 @@ func ToggleElection(db *mongo.Database, ctx context.Context, bodyInput Toggle) e
 	return nil
 }
 
-func GetResult(db *mongo.Database, ctx context.Context) (candidates.Candidates, error) {
+func GetResult(db *mongo.Database, ctx context.Context) (model.Candidates, error) {
 	// Get all candidates' detail
 	results, err := candidates.GetAllCandidates(db, ctx)
 	if err != nil {
