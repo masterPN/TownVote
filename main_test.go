@@ -10,6 +10,7 @@ import (
 	"LineTownVote/websocket_mod"
 	"bytes"
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -18,12 +19,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
+	"github.com/tidwall/gjson"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-const Bearer = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF9ubyI6IjEyMzQ1Njc4OTAxMjMiLCJpZF9sYXNlckNvZGUiOiJKVDEyMyIsImV4cCI6MTcwNTE2MTM1MywiaWF0IjoxNzA0Mjk3MzUzLCJpc3MiOiJLb3JLb3JUb3IifQ.1yivRGTxy7e0Jb3NyLhbA5LEEnId2ceu13o4lS46jDA"
 
 func setupRouter() *gin.Engine {
 	// Set MongoDB router
@@ -118,6 +118,23 @@ func setupRouter() *gin.Engine {
 	return router
 }
 
+func getToken() string {
+	router := setupRouter()
+
+	w := httptest.NewRecorder()
+	var reqBody = []byte(`{
+		"id_no": "1234567890123",
+		"id_laserCode": "JT123"
+	}`)
+	req, _ := http.NewRequest(http.MethodPost, "/get_token", bytes.NewBuffer(reqBody))
+	req.Header.Add("Content-Type", "application/json")
+	router.ServeHTTP(w, req)
+
+	print(fmt.Sprintf("%s %s", "Bearer", gjson.Get(w.Body.String(), "token").String()))
+
+	return fmt.Sprintf("%s %s", "Bearer", gjson.Get(w.Body.String(), "token").String())
+}
+
 func Test_PostCreateCandidate_Success(t *testing.T) {
 	Test_DeleteCandidate_Success(t)
 
@@ -132,7 +149,7 @@ func Test_PostCreateCandidate_Success(t *testing.T) {
 		"policy": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown"
 	  }`)
 	req, _ := http.NewRequest(http.MethodPost, "/api/candidates", bytes.NewBuffer(reqBody))
-	req.Header.Set("Authorization", Bearer)
+	req.Header.Set("Authorization", getToken())
 	req.Header.Add("Content-Type", "application/json")
 	router.ServeHTTP(w, req)
 
@@ -154,7 +171,7 @@ func Test_GetAllCandidates_Success(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/candidates", nil)
-	req.Header.Set("Authorization", Bearer)
+	req.Header.Set("Authorization", getToken())
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
@@ -175,7 +192,7 @@ func Test_GetCandidateDetail_Success(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/candidates/1", nil)
-	req.Header.Set("Authorization", Bearer)
+	req.Header.Set("Authorization", getToken())
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
@@ -186,7 +203,7 @@ func Test_GetCandidateDetail_Error_IdNotFound(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/candidates/0", nil)
-	req.Header.Set("Authorization", Bearer)
+	req.Header.Set("Authorization", getToken())
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, 500, w.Code)
@@ -197,7 +214,7 @@ func Test_GetCandidateDetail_Error_BadParam(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/candidates/z", nil)
-	req.Header.Set("Authorization", Bearer)
+	req.Header.Set("Authorization", getToken())
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, 400, w.Code)
@@ -233,7 +250,7 @@ func Test_PostCreateCandidate_Error(t *testing.T) {
 		"policy": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown"
 	  }`)
 	req, _ := http.NewRequest(http.MethodPost, "/api/candidates", bytes.NewBuffer(reqBody))
-	req.Header.Set("Authorization", Bearer)
+	req.Header.Set("Authorization", getToken())
 	req.Header.Add("Content-Type", "application/json")
 	router.ServeHTTP(w, req)
 
@@ -272,7 +289,7 @@ func Test_PutUpdateCandidate_Success(t *testing.T) {
 		"policy": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown"
 	  }`)
 	req, _ := http.NewRequest(http.MethodPut, "/api/candidates/1", bytes.NewBuffer(reqBody))
-	req.Header.Set("Authorization", Bearer)
+	req.Header.Set("Authorization", getToken())
 	req.Header.Add("Content-Type", "application/json")
 	router.ServeHTTP(w, req)
 
@@ -292,7 +309,7 @@ func Test_PutUpdateCandidate_Error_IdsDontMatched(t *testing.T) {
 		"policy": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown"
 	  }`)
 	req, _ := http.NewRequest(http.MethodPut, "/api/candidates/1", bytes.NewBuffer(reqBody))
-	req.Header.Set("Authorization", Bearer)
+	req.Header.Set("Authorization", getToken())
 	req.Header.Add("Content-Type", "application/json")
 	router.ServeHTTP(w, req)
 
@@ -312,7 +329,7 @@ func Test_PutUpdateCandidate_Error_IdNotFound(t *testing.T) {
 		"policy": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown"
 	  }`)
 	req, _ := http.NewRequest(http.MethodPut, "/api/candidates/-1", bytes.NewBuffer(reqBody))
-	req.Header.Set("Authorization", Bearer)
+	req.Header.Set("Authorization", getToken())
 	req.Header.Add("Content-Type", "application/json")
 	router.ServeHTTP(w, req)
 
@@ -334,7 +351,7 @@ func Test_DeleteCandidate_Success(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodDelete, "/api/candidates/1", nil)
-	req.Header.Set("Authorization", Bearer)
+	req.Header.Set("Authorization", getToken())
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
@@ -345,7 +362,7 @@ func Test_DeleteCandidate_Error_IdNotFound(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodDelete, "/api/candidates/1", nil)
-	req.Header.Set("Authorization", Bearer)
+	req.Header.Set("Authorization", getToken())
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, 500, w.Code)
@@ -367,7 +384,7 @@ func Test_PostVoteStatus_Success(t *testing.T) {
 	w := httptest.NewRecorder()
 	var reqBody = []byte(`{"nationalId": "1234567890123"}`)
 	req, _ := http.NewRequest(http.MethodPost, "/api/vote/status", bytes.NewBuffer(reqBody))
-	req.Header.Set("Authorization", Bearer)
+	req.Header.Set("Authorization", getToken())
 	req.Header.Add("Content-Type", "application/json")
 	router.ServeHTTP(w, req)
 
@@ -390,7 +407,7 @@ func Test_PostVote_Success(t *testing.T) {
 	w := httptest.NewRecorder()
 	var reqBody = []byte(`{"nationalId": "1234567890123", "candidateId": 1}`)
 	req, _ := http.NewRequest(http.MethodPost, "/api/vote", bytes.NewBuffer(reqBody))
-	req.Header.Set("Authorization", Bearer)
+	req.Header.Set("Authorization", getToken())
 	req.Header.Add("Content-Type", "application/json")
 	router.ServeHTTP(w, req)
 
@@ -413,7 +430,7 @@ func Test_PostToggleElection_Success(t *testing.T) {
 	w := httptest.NewRecorder()
 	var reqBody = []byte(`{"enable": true}`)
 	req, _ := http.NewRequest(http.MethodPost, "/api/election/toggle", bytes.NewBuffer(reqBody))
-	req.Header.Set("Authorization", Bearer)
+	req.Header.Set("Authorization", getToken())
 	req.Header.Add("Content-Type", "application/json")
 	router.ServeHTTP(w, req)
 
@@ -426,7 +443,7 @@ func Test_PostToggleElection_Error(t *testing.T) {
 	w := httptest.NewRecorder()
 	var reqBody = []byte(`{"enable": tru}`)
 	req, _ := http.NewRequest(http.MethodPost, "/api/election/toggle", bytes.NewBuffer(reqBody))
-	req.Header.Set("Authorization", Bearer)
+	req.Header.Set("Authorization", getToken())
 	req.Header.Add("Content-Type", "application/json")
 	router.ServeHTTP(w, req)
 
@@ -448,7 +465,7 @@ func Test_GetElectionResult_Success(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/api/election/result", nil)
-	req.Header.Set("Authorization", Bearer)
+	req.Header.Set("Authorization", getToken())
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
@@ -469,7 +486,7 @@ func Test_GetElectionResultExport_Success(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/api/election/export", nil)
-	req.Header.Set("Authorization", Bearer)
+	req.Header.Set("Authorization", getToken())
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
