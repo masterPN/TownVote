@@ -18,11 +18,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const Bearer = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF9ubyI6IjkiLCJpZF9uYW1lIjoiZ29saW5lIiwiZXhwIjoxNjUyOTY0MDUxLCJpYXQiOjE2NTIxMDAwNTEsImlzcyI6IktvcktvclRvciJ9.8Bz7l96wOsaXNtqIlUA31mt6ctE0YzcMZEYS_b-tSOc"
+const Bearer = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF9ubyI6IjEyMzQ1Njc4OTAxMjMiLCJpZF9sYXNlckNvZGUiOiJKVDEyMyIsImV4cCI6MTcwNTE2MTM1MywiaWF0IjoxNzA0Mjk3MzUzLCJpc3MiOiJLb3JLb3JUb3IifQ.1yivRGTxy7e0Jb3NyLhbA5LEEnId2ceu13o4lS46jDA"
 
 func setupRouter() *gin.Engine {
 	// Set MongoDB router
@@ -36,8 +37,14 @@ func setupRouter() *gin.Engine {
 	if err != nil {
 		panic(err)
 	}
-	// defer client.Disconnect(ctx)
+
+	// If collection status is empty, then init status
 	voteDB := client.Database("LineTownVoteDB")
+	voteDB.Collection("status").Drop(ctx)
+	_, _ = voteDB.Collection("status").InsertOne(ctx, bson.D{
+		{Key: "candidateContinuouslyCount", Value: 0},
+		{Key: "voteToggle", Value: false},
+	})
 
 	// Set root api router
 	router := gin.Default()
@@ -109,6 +116,27 @@ func setupRouter() *gin.Engine {
 	})
 
 	return router
+}
+
+func Test_PostCreateCandidate_Success(t *testing.T) {
+	Test_DeleteCandidate_Success(t)
+
+	router := setupRouter()
+
+	w := httptest.NewRecorder()
+	var reqBody = []byte(`{
+		"name": "Brown",
+		"dob": "August 8, 2011",
+		"bioLink": "https://line.fandom.com/wiki/Brown",
+		"imageLink": "https://static.wikia.nocookie.net/line/images/b/bb/2015-brown.png/revision/latest/scale-to-width-down/700?cb=20150808131630",
+		"policy": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown"
+	  }`)
+	req, _ := http.NewRequest(http.MethodPost, "/api/candidates", bytes.NewBuffer(reqBody))
+	req.Header.Set("Authorization", Bearer)
+	req.Header.Add("Content-Type", "application/json")
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
 }
 
 func Test_GetAllCandidates_Unauthorized(t *testing.T) {
@@ -193,25 +221,6 @@ func Test_PostCreateCandidate_Unauthorized(t *testing.T) {
 	assert.Equal(t, 401, w.Code)
 }
 
-func Test_PostCreateCandidate_Success(t *testing.T) {
-	router := setupRouter()
-
-	w := httptest.NewRecorder()
-	var reqBody = []byte(`{
-		"name": "Brown",
-		"dob": "August 8, 2011",
-		"bioLink": "https://line.fandom.com/wiki/Brown",
-		"imageLink": "https://static.wikia.nocookie.net/line/images/b/bb/2015-brown.png/revision/latest/scale-to-width-down/700?cb=20150808131630",
-		"policy": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown"
-	  }`)
-	req, _ := http.NewRequest(http.MethodPost, "/api/candidates", bytes.NewBuffer(reqBody))
-	req.Header.Set("Authorization", Bearer)
-	req.Header.Add("Content-Type", "application/json")
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, 200, w.Code)
-}
-
 func Test_PostCreateCandidate_Error(t *testing.T) {
 	router := setupRouter()
 
@@ -236,14 +245,14 @@ func Test_PutUpdateCandidate_Unauthorized(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	var reqBody = []byte(`{
-		"id": "3"
+		"id": "-1"
 		"name": "Brown",
 		"dob": "August 8, 2011",
 		"bioLink": "https://line.fandom.com/wiki/Brown",
 		"imageLink": "https://static.wikia.nocookie.net/line/images/b/bb/2015-brown.png/revision/latest/scale-to-width-down/700?cb=20150808131630",
 		"policy": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown"
 	  }`)
-	req, _ := http.NewRequest(http.MethodPut, "/api/candidates/3", bytes.NewBuffer(reqBody))
+	req, _ := http.NewRequest(http.MethodPut, "/api/candidates/-1", bytes.NewBuffer(reqBody))
 	req.Header.Add("Content-Type", "application/json")
 	router.ServeHTTP(w, req)
 
@@ -255,14 +264,14 @@ func Test_PutUpdateCandidate_Success(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	var reqBody = []byte(`{
-		"id": "3",
-		"name": "Brown",
+		"id": "1",
+		"name": "Orange",
 		"dob": "August 8, 2011",
 		"bioLink": "https://line.fandom.com/wiki/Brown",
 		"imageLink": "https://static.wikia.nocookie.net/line/images/b/bb/2015-brown.png/revision/latest/scale-to-width-down/700?cb=20150808131630",
 		"policy": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown"
 	  }`)
-	req, _ := http.NewRequest(http.MethodPut, "/api/candidates/3", bytes.NewBuffer(reqBody))
+	req, _ := http.NewRequest(http.MethodPut, "/api/candidates/1", bytes.NewBuffer(reqBody))
 	req.Header.Set("Authorization", Bearer)
 	req.Header.Add("Content-Type", "application/json")
 	router.ServeHTTP(w, req)
@@ -275,14 +284,14 @@ func Test_PutUpdateCandidate_Error_IdsDontMatched(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	var reqBody = []byte(`{
-		"id": "4",
+		"id": "-1",
 		"name": "Brown",
 		"dob": "August 8, 2011",
 		"bioLink": "https://line.fandom.com/wiki/Brown",
 		"imageLink": "https://static.wikia.nocookie.net/line/images/b/bb/2015-brown.png/revision/latest/scale-to-width-down/700?cb=20150808131630",
 		"policy": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown"
 	  }`)
-	req, _ := http.NewRequest(http.MethodPut, "/api/candidates/3", bytes.NewBuffer(reqBody))
+	req, _ := http.NewRequest(http.MethodPut, "/api/candidates/1", bytes.NewBuffer(reqBody))
 	req.Header.Set("Authorization", Bearer)
 	req.Header.Add("Content-Type", "application/json")
 	router.ServeHTTP(w, req)
@@ -295,14 +304,14 @@ func Test_PutUpdateCandidate_Error_IdNotFound(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	var reqBody = []byte(`{
-		"id": "4",
+		"id": "-1",
 		"name": "Brown",
 		"dob": "August 8, 2011",
 		"bioLink": "https://line.fandom.com/wiki/Brown",
 		"imageLink": "https://static.wikia.nocookie.net/line/images/b/bb/2015-brown.png/revision/latest/scale-to-width-down/700?cb=20150808131630",
 		"policy": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown"
 	  }`)
-	req, _ := http.NewRequest(http.MethodPut, "/api/candidates/4", bytes.NewBuffer(reqBody))
+	req, _ := http.NewRequest(http.MethodPut, "/api/candidates/-1", bytes.NewBuffer(reqBody))
 	req.Header.Set("Authorization", Bearer)
 	req.Header.Add("Content-Type", "application/json")
 	router.ServeHTTP(w, req)
@@ -314,7 +323,7 @@ func Test_DeleteCandidate_Unauthorized(t *testing.T) {
 	router := setupRouter()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodDelete, "/api/candidates/3", nil)
+	req, _ := http.NewRequest(http.MethodDelete, "/api/candidates/1", nil)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, 401, w.Code)
@@ -324,7 +333,7 @@ func Test_DeleteCandidate_Success(t *testing.T) {
 	router := setupRouter()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodDelete, "/api/candidates/3", nil)
+	req, _ := http.NewRequest(http.MethodDelete, "/api/candidates/1", nil)
 	req.Header.Set("Authorization", Bearer)
 	router.ServeHTTP(w, req)
 
@@ -335,7 +344,7 @@ func Test_DeleteCandidate_Error_IdNotFound(t *testing.T) {
 	router := setupRouter()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodDelete, "/api/candidates/3", nil)
+	req, _ := http.NewRequest(http.MethodDelete, "/api/candidates/1", nil)
 	req.Header.Set("Authorization", Bearer)
 	router.ServeHTTP(w, req)
 
@@ -356,7 +365,7 @@ func Test_PostVoteStatus_Success(t *testing.T) {
 	router := setupRouter()
 
 	w := httptest.NewRecorder()
-	var reqBody = []byte(`{"nationalId": "12345"}`)
+	var reqBody = []byte(`{"nationalId": "1234567890123"}`)
 	req, _ := http.NewRequest(http.MethodPost, "/api/vote/status", bytes.NewBuffer(reqBody))
 	req.Header.Set("Authorization", Bearer)
 	req.Header.Add("Content-Type", "application/json")
@@ -379,7 +388,7 @@ func Test_PostVote_Success(t *testing.T) {
 	router := setupRouter()
 
 	w := httptest.NewRecorder()
-	var reqBody = []byte(`{"nationalId": "12345", "candidateId": 1}`)
+	var reqBody = []byte(`{"nationalId": "1234567890123", "candidateId": 1}`)
 	req, _ := http.NewRequest(http.MethodPost, "/api/vote", bytes.NewBuffer(reqBody))
 	req.Header.Set("Authorization", Bearer)
 	req.Header.Add("Content-Type", "application/json")
@@ -487,11 +496,13 @@ func echo(w http.ResponseWriter, r *http.Request) {
 }
 
 func Test_SocketCandidate(t *testing.T) {
+	Test_PostCreateCandidate_Success(t)
+
 	router := setupRouter()
 	_ = router
 
 	// Convert http://127.0.0.1 to ws://127.0.0.
-	u := "ws://127.0.0.1:8080/ws/results/2"
+	u := "ws://127.0.0.1:8080/ws/results/1"
 
 	// Connect to the server
 	ws, _, err := websocket.DefaultDialer.Dial(u, nil)
@@ -506,5 +517,5 @@ func Test_SocketCandidate(t *testing.T) {
 		t.Fatalf("%v", err)
 	}
 	pString := strings.TrimSuffix(string(p), "\n")
-	assert.Equal(t, string(`{"id":"2","votedCount":2}`), pString)
+	assert.Equal(t, string(`{"id":"1","votedCount":0}`), pString)
 }
