@@ -11,7 +11,7 @@ type loginInfomation struct {
 
 func StaticLoginService() LoginService {
 	return &loginInfomation{
-		id_no:        "9",
+		id_no:        "1234567890123",
 		id_laserCode: "JT123",
 	}
 }
