@@ -1,6 +1,7 @@
 package candidates
 
 import (
+	"LineTownVote/model"
 	"context"
 	"errors"
 	"fmt"
@@ -18,33 +19,10 @@ const collectionStatusName = "status"
 const collectionName = "candidates"
 const collectionResultName = "result"
 
-type Status struct {
-	CandidateContinuouslyCount int32 `json:"candidateContinuouslyCount"`
-}
-type Candidates []struct {
-	Id         string `json:"id"`
-	Name       string `json:"name"`
-	Dob        string `json:"dob"`
-	BioLink    string `json:"bioLink"`
-	ImageLink  string `json:"imageLink"`
-	Policy     string `json:"policy"`
-	VotedCount int32  `json:"votedCount"`
-	Percentage string `json:"percentage,omitempty"`
-}
-type Candidate struct {
-	Id         string `json:"id"`
-	Name       string `json:"name"`
-	Dob        string `json:"dob"`
-	BioLink    string `json:"bioLink"`
-	ImageLink  string `json:"imageLink"`
-	Policy     string `json:"policy"`
-	VotedCount int32  `json:"votedCount"`
-}
+var NilCandidates model.Candidates
+var nilCandidate model.Candidate
 
-var NilCandidates Candidates
-var nilCandidate Candidate
-
-func GetAllCandidates(db *mongo.Database, ctx context.Context) (Candidates, error) {
+func GetAllCandidates(db *mongo.Database, ctx context.Context) (model.Candidates, error) {
 	candidatesCollection := db.Collection(collectionName)
 	resultCollection := db.Collection(collectionResultName)
 
@@ -52,7 +30,7 @@ func GetAllCandidates(db *mongo.Database, ctx context.Context) (Candidates, erro
 	if err != nil {
 		return NilCandidates, err
 	}
-	var res Candidates
+	var res model.Candidates
 	if err = cursor.All(ctx, &res); err != nil {
 		return NilCandidates, err
 	}
@@ -71,7 +49,7 @@ func GetAllCandidates(db *mongo.Database, ctx context.Context) (Candidates, erro
 	return res, err
 }
 
-func GetCandidateDetail(db *mongo.Database, ctx context.Context, candidateId string) (Candidate, error) {
+func GetCandidateDetail(db *mongo.Database, ctx context.Context, candidateId string) (model.Candidate, error) {
 	candidatesCollection := db.Collection(collectionName)
 	resultCollection := db.Collection(collectionResultName)
 
@@ -87,7 +65,7 @@ func GetCandidateDetail(db *mongo.Database, ctx context.Context, candidateId str
 		{"votedCount", 1}}
 	opts := options.FindOne().SetProjection(projection)
 
-	var res Candidate
+	var res model.Candidate
 	err := candidatesCollection.FindOne(ctx, filter, opts).Decode(&res)
 	if err != nil {
 		return nilCandidate, err
@@ -105,13 +83,13 @@ func GetCandidateDetail(db *mongo.Database, ctx context.Context, candidateId str
 	return res, err
 }
 
-func CreateCandidate(db *mongo.Database, ctx context.Context, inputForm Candidate) (Candidate, error) {
+func CreateCandidate(db *mongo.Database, ctx context.Context, inputForm model.Candidate) (model.Candidate, error) {
 	candidatesCollection := db.Collection(collectionName)
 	statusCollection := db.Collection(collectionStatusName)
 
 	// Check if found the same bioLink then abort
 	filter := bson.D{{"bioLink", inputForm.BioLink}}
-	var resCheck Candidate
+	var resCheck model.Candidate
 	err := candidatesCollection.FindOne(ctx, filter).Decode(&resCheck)
 	if err == nil {
 		return nilCandidate, errors.New("duplicate bio link")
@@ -120,7 +98,7 @@ func CreateCandidate(db *mongo.Database, ctx context.Context, inputForm Candidat
 	// Prepare form
 	// Get candidate continuously count
 	filter = bson.D{}
-	var resStatus Status
+	var resStatus model.Status
 	err = statusCollection.FindOne(ctx, filter).Decode(&resStatus)
 	if err != nil {
 		return nilCandidate, err
@@ -157,7 +135,7 @@ func CreateCandidate(db *mongo.Database, ctx context.Context, inputForm Candidat
 	return GetCandidateDetail(db, ctx, strconv.Itoa(int(currentCount)))
 }
 
-func UpdateCandidate(db *mongo.Database, ctx context.Context, bodyInput Candidate, candidateID string) (Candidate, error) {
+func UpdateCandidate(db *mongo.Database, ctx context.Context, bodyInput model.Candidate, candidateID string) (model.Candidate, error) {
 	// Check if the candidate is store in DB
 	_, err := GetCandidateDetail(db, ctx, candidateID)
 	if err != nil {
@@ -222,7 +200,7 @@ func APIGetCandidateDetailHandler(c *gin.Context, voteDB *mongo.Database, ctx co
 }
 
 func APIPostCreateCandidateHandler(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
-	var bodyInput Candidate
+	var bodyInput model.Candidate
 	c.BindJSON(&bodyInput)
 	res, err := CreateCandidate(voteDB, ctx, bodyInput)
 	if err != nil {
@@ -233,7 +211,7 @@ func APIPostCreateCandidateHandler(c *gin.Context, voteDB *mongo.Database, ctx c
 }
 
 func APIPutUpdateCandidateHandler(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
-	var bodyInput Candidate
+	var bodyInput model.Candidate
 	c.BindJSON(&bodyInput)
 	candidateID := c.Param("candidateID")
 	if candidateID != bodyInput.Id {
