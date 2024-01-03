@@ -5,8 +5,8 @@ go 1.18
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.7.7
-	github.com/go-playground/assert/v2 v2.0.1
 	github.com/gorilla/websocket v1.5.0
+	github.com/stretchr/testify v1.7.1
 	go.mongodb.org/mongo-driver v1.9.1
 )
 
@@ -27,7 +27,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/stretchr/testify v1.7.1 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.1 // indirect
