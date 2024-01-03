@@ -172,6 +172,16 @@ func DeleteCandidate(db *mongo.Database, ctx context.Context, candidateID string
 }
 
 // API Handler
+
+// @BasePath /api
+
+// GetCandidates godoc
+// @Summary Get Candidates
+// @Description Get all candidates
+// @Tags candidates
+// @Produce json
+// @Response 200 {object} model.Candidates "OK"
+// @Router /candidates [get]
 func APIGetCandidatesHandler(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
 	res, err := GetAllCandidates(voteDB, ctx)
 	if err != nil {
@@ -181,6 +191,13 @@ func APIGetCandidatesHandler(c *gin.Context, voteDB *mongo.Database, ctx context
 	c.JSON(http.StatusOK, res)
 }
 
+// GetCandidate godoc
+// @Summary Get Candidate
+// @Description Get selected candidate
+// @Tags candidates
+// @Produce json
+// @Response 200 {object} model.Candidate "OK"
+// @Router /candidates/{id} [get]
 func APIGetCandidateDetailHandler(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
 	candidateID := c.Param("candidateID")
 	num, _ := strconv.Atoi(candidateID)
@@ -199,6 +216,14 @@ func APIGetCandidateDetailHandler(c *gin.Context, voteDB *mongo.Database, ctx co
 	c.JSON(http.StatusOK, res)
 }
 
+// CreatCandidate godoc
+// @Summary Create Candidate
+// @Description Create candidate
+// @Tags candidates
+// @Produce json
+// @Param candidate body model.Candidate true "candidate detail"
+// @Response 200 {object} model.Candidate "OK"
+// @Router /candidates [post]
 func APIPostCreateCandidateHandler(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
 	var bodyInput model.Candidate
 	c.BindJSON(&bodyInput)
@@ -210,6 +235,14 @@ func APIPostCreateCandidateHandler(c *gin.Context, voteDB *mongo.Database, ctx c
 	c.JSON(http.StatusOK, res)
 }
 
+// UpdateCandidate godoc
+// @Summary Update Candidate
+// @Description Update candidate
+// @Tags candidates
+// @Produce json
+// @Param candidate body model.Candidate true "candidate detail"
+// @Response 200 {object} model.Candidate "OK"
+// @Router /candidates/{id} [put]
 func APIPutUpdateCandidateHandler(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
 	var bodyInput model.Candidate
 	c.BindJSON(&bodyInput)
@@ -226,12 +259,24 @@ func APIPutUpdateCandidateHandler(c *gin.Context, voteDB *mongo.Database, ctx co
 	c.JSON(http.StatusOK, res)
 }
 
+// DeleteCandidate godoc
+// @Summary Delete Candidate
+// @Description Delete candidate
+// @Tags candidates
+// @Produce json
+// @Response 200 {object} model.ApiDeleteCandidateHandlerResponse "OK"
+// @Router /candidates/{id} [delete]
 func APIDeleteCandidateHandler(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
 	candidateID := c.Param("candidateID")
 	err := DeleteCandidate(voteDB, ctx, candidateID)
+
+	var res model.ApiDeleteCandidateHandlerResponse
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Candidate not found"})
+		res.Status = "error"
+		res.Message = "Candidate not found"
+		c.JSON(http.StatusInternalServerError, res)
 		panic(err)
 	}
-	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	res.Status = "ok"
+	c.JSON(http.StatusOK, res)
 }

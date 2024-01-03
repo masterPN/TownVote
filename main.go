@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -13,6 +15,7 @@ import (
 	"LineTownVote/api/election"
 	"LineTownVote/api/vote"
 	"LineTownVote/controller"
+	"LineTownVote/docs"
 	"LineTownVote/middleware"
 	"LineTownVote/service"
 	"LineTownVote/websocket_mod"
@@ -110,6 +113,10 @@ func main() {
 	router.GET("/ws/results/:candidateID", func(c *gin.Context) {
 		websocket_mod.Handler(c, voteDB, ctx)
 	})
+
+	// Swagger
+	docs.SwaggerInfo.BasePath = "/api"
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	router.Run()
 

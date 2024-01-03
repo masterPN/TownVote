@@ -99,6 +99,15 @@ func GetCSVExport(db *mongo.Database, ctx context.Context) {
 	}
 }
 
+// @BasePath /api
+
+// ToggleElection godoc
+// @Summary Toggle Election
+// @Description Toggle vote to open or close
+// @Tags election
+// @Produce json
+// @Response 200 {object} model.ApiPostToggleResponse "OK"
+// @Router /election/toggle [post]
 func APIPostToggle(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
 	var bodyInput Toggle
 	c.BindJSON(&bodyInput)
@@ -110,6 +119,13 @@ func APIPostToggle(c *gin.Context, voteDB *mongo.Database, ctx context.Context) 
 	}
 }
 
+// GetResult godoc
+// @Summary Get Result
+// @Description Get results from every candidates
+// @Tags election
+// @Produce json
+// @Response 200 {object} model.Candidates "OK"
+// @Router /election/result [get]
 func APIGetResult(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
 	res, err := GetResult(voteDB, ctx)
 	if err != nil {
@@ -119,6 +135,12 @@ func APIGetResult(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// ExportCSV godoc
+// @Summary Export Result
+// @Description Export result as CSV
+// @Tags election
+// @Response 200
+// @Router /election/export [get]
 func APIGetExport(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
 	GetCSVExport(voteDB, ctx)
 	fileName := "results.csv"

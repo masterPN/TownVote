@@ -74,6 +74,16 @@ func Vote(db *mongo.Database, ctx context.Context, bodyInput VoteInput) (bool, s
 	return true, "", nil
 }
 
+// @BasePath /api
+
+// CheckVoteStatus godoc
+// @Summary Check Vote Status
+// @Description Check vote status if user have the right to vote
+// @Tags vote
+// @Produce json
+// @Param nationalId body VoteInput true "national Id"
+// @Response 200 {object} model.ApiPostToggleResponse "OK"
+// @Router /vote/status [post]
 func APIPostCheckStatusHandler(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
 	var bodyInput VoteInput
 	c.BindJSON(&bodyInput)
@@ -90,6 +100,14 @@ func APIPostCheckStatusHandler(c *gin.Context, voteDB *mongo.Database, ctx conte
 	}
 }
 
+// PostVote godoc
+// @Summary Vote Candidate
+// @Description Vote candidate
+// @Tags vote
+// @Produce json
+// @Param voteInput body VoteInput true "Vote Input"
+// @Response 200 {object} model.ApiPostVoteResponse "OK"
+// @Router /vote [post]
 func APIPostVote(c *gin.Context, voteDB *mongo.Database, ctx context.Context) {
 	var bodyInput VoteInput
 	c.BindJSON(&bodyInput)

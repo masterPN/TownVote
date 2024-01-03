@@ -1,0 +1,239 @@
+definitions:
+  model.ApiDeleteCandidateHandlerResponse:
+    properties:
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+  model.ApiPostToggleResponse:
+    properties:
+      enable:
+        type: boolean
+      status:
+        type: string
+    type: object
+  model.ApiPostVoteResponse:
+    properties:
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+  model.Candidate:
+    properties:
+      bioLink:
+        type: string
+      dob:
+        type: string
+      id:
+        type: string
+      imageLink:
+        type: string
+      name:
+        type: string
+      policy:
+        type: string
+      votedCount:
+        type: integer
+    type: object
+  vote.VoteInput:
+    properties:
+      candidateId:
+        type: integer
+      nationalId:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /candidates:
+    get:
+      description: Get all candidates
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              properties:
+                bioLink:
+                  type: string
+                dob:
+                  type: string
+                id:
+                  type: string
+                imageLink:
+                  type: string
+                name:
+                  type: string
+                percentage:
+                  type: string
+                policy:
+                  type: string
+                votedCount:
+                  type: integer
+              type: object
+            type: array
+      summary: Get Candidates
+      tags:
+      - candidates
+    post:
+      description: Create candidate
+      parameters:
+      - description: candidate detail
+        in: body
+        name: candidate
+        required: true
+        schema:
+          $ref: '#/definitions/model.Candidate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Candidate'
+      summary: Create Candidate
+      tags:
+      - candidates
+  /candidates/{id}:
+    delete:
+      description: Delete candidate
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ApiDeleteCandidateHandlerResponse'
+      summary: Delete Candidate
+      tags:
+      - candidates
+    get:
+      description: Get selected candidate
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Candidate'
+      summary: Get Candidate
+      tags:
+      - candidates
+    put:
+      description: Update candidate
+      parameters:
+      - description: candidate detail
+        in: body
+        name: candidate
+        required: true
+        schema:
+          $ref: '#/definitions/model.Candidate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Candidate'
+      summary: Update Candidate
+      tags:
+      - candidates
+  /election/export:
+    get:
+      description: Export result as CSV
+      responses:
+        "200":
+          description: OK
+      summary: Export Result
+      tags:
+      - election
+  /election/result:
+    get:
+      description: Get results from every candidates
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              properties:
+                bioLink:
+                  type: string
+                dob:
+                  type: string
+                id:
+                  type: string
+                imageLink:
+                  type: string
+                name:
+                  type: string
+                percentage:
+                  type: string
+                policy:
+                  type: string
+                votedCount:
+                  type: integer
+              type: object
+            type: array
+      summary: Get Result
+      tags:
+      - election
+  /election/toggle:
+    post:
+      description: Toggle vote to open or close
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ApiPostToggleResponse'
+      summary: Toggle Election
+      tags:
+      - election
+  /vote:
+    post:
+      description: Vote candidate
+      parameters:
+      - description: Vote Input
+        in: body
+        name: voteInput
+        required: true
+        schema:
+          $ref: '#/definitions/vote.VoteInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ApiPostVoteResponse'
+      summary: Vote Candidate
+      tags:
+      - vote
+  /vote/status:
+    post:
+      description: Check vote status if user have the right to vote
+      parameters:
+      - description: national Id
+        in: body
+        name: nationalId
+        required: true
+        schema:
+          $ref: '#/definitions/vote.VoteInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ApiPostToggleResponse'
+      summary: Check Vote Status
+      tags:
+      - vote
+swagger: "2.0"
