@@ -492,26 +492,6 @@ func Test_GetElectionResultExport_Success(t *testing.T) {
 	assert.Equal(t, 200, w.Code)
 }
 
-var upgrader = websocket.Upgrader{}
-
-func echo(w http.ResponseWriter, r *http.Request) {
-	c, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		return
-	}
-	defer c.Close()
-	for {
-		mt, message, err := c.ReadMessage()
-		if err != nil {
-			break
-		}
-		err = c.WriteMessage(mt, message)
-		if err != nil {
-			break
-		}
-	}
-}
-
 func Test_SocketCandidate(t *testing.T) {
 	Test_PostCreateCandidate_Success(t)
 
