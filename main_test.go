@@ -13,11 +13,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/gjson"
 	"go.mongodb.org/mongo-driver/bson"
@@ -499,27 +497,28 @@ func Test_GetElectionResultExport_Success(t *testing.T) {
 	assert.Equal(t, 200, w.Code)
 }
 
-func Test_SocketCandidate(t *testing.T) {
-	Test_PostCreateCandidate_Success(t)
+// Run main.go first and then run this test
+// func Test_SocketCandidate(t *testing.T) {
+// 	Test_PostCreateCandidate_Success(t)
 
-	router := setupRouter()
-	_ = router
+// 	router := setupRouter()
+// 	_ = router
 
-	// Convert http://127.0.0.1 to ws://127.0.0.
-	u := "ws://127.0.0.1:8080/ws/results/1"
+// 	// Convert http://127.0.0.1 to ws://127.0.0.
+// 	u := "ws://127.0.0.1:8080/ws/results/1"
 
-	// Connect to the server
-	ws, _, err := websocket.DefaultDialer.Dial(u, nil)
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-	defer ws.Close()
+// 	// Connect to the server
+// 	ws, _, err := websocket.DefaultDialer.Dial(u, nil)
+// 	if err != nil {
+// 		t.Fatalf("%v", err)
+// 	}
+// 	defer ws.Close()
 
-	// read response and check to see if it's what we expect.
-	_, p, err := ws.ReadMessage()
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-	pString := strings.TrimSuffix(string(p), "\n")
-	assert.Equal(t, string(`{"id":"1","votedCount":0}`), pString)
-}
+// 	// read response and check to see if it's what we expect.
+// 	_, p, err := ws.ReadMessage()
+// 	if err != nil {
+// 		t.Fatalf("%v", err)
+// 	}
+// 	pString := strings.TrimSuffix(string(p), "\n")
+// 	assert.Equal(t, string(`{"id":"1","votedCount":0}`), pString)
+// }
