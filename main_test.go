@@ -136,7 +136,14 @@ func getToken() string {
 }
 
 func Test_PostCreateCandidate_Success(t *testing.T) {
-	Test_DeleteCandidate_Success(t)
+	// Deleting existing candidates 1
+	{
+		router := setupRouter()
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodDelete, "/api/candidates/1", nil)
+		req.Header.Set("Authorization", getToken())
+		router.ServeHTTP(w, req)
+	}
 
 	router := setupRouter()
 
