@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	jwt "github.com/golang-jwt/jwt/v5"
 )
 
 type JWTService interface {
@@ -18,7 +18,7 @@ type jwtServices struct {
 type authCustomClaims struct {
 	Id_no        string `json:"id_no"`
 	Id_laserCode string `json:"id_laserCode"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 func JWTAuthService() JWTService {
@@ -32,10 +32,10 @@ func (service *jwtServices) GenerateToken(id_no string, id_laserCode string) str
 	claims := &authCustomClaims{
 		id_no,
 		id_laserCode,
-		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(10 * 24 * time.Hour).Unix(),
+		jwt.RegisteredClaims{
+			ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(10 * 24 * time.Hour)},
 			Issuer:    service.issure,
-			IssuedAt:  time.Now().Unix(),
+			IssuedAt:  &jwt.NumericDate{Time: time.Now()},
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
