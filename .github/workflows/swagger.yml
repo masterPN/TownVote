@@ -16,14 +16,12 @@ jobs:
       with:
         go-version: '1.21'
 
-    - name: Export go path
-      run: export PATH=$(go env GOPATH)/bin:$PATH
-
-    - name: Set up swag
-      run: go get -u github.com/swaggo/swag/cmd/swag
-
     - name: Refresh swagger doc
-      run: swag init --md ./
+      shell: bash
+      run: |
+        export PATH=$(go env GOPATH)/bin:$PATH
+        go get -u github.com/swaggo/swag/cmd/swag
+        swag init --md ./
 
     - name: Update swagger resource
       uses: test-room-7/action-update-file@v1
