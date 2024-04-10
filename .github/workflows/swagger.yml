@@ -1,0 +1,30 @@
+name: Swagger
+
+on: 
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  swagger:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Set up swag
+      run: go get -u github.com/swaggo/swag/cmd/swag
+
+    - name: Refresh swagger doc
+      run: swag init --md ./
+
+    - name: Update swagger resource
+      uses: test-room-7/action-update-file@v1
+      with:
+        file-path: docs/*
+        commit-msg: Update swagger
+        github-token: ${{ secrets.REPO_TOKEN }}
