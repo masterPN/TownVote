@@ -1,7 +1,8 @@
 name: Swagger
 
 on: 
-  pull_request
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   swagger:
@@ -14,6 +15,9 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: '1.21'
+
+    - name: Export go path
+      run: export PATH=$(go env GOPATH)/bin:$PATH
 
     - name: Set up swag
       run: go get -u github.com/swaggo/swag/cmd/swag
