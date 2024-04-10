@@ -19,7 +19,7 @@ jobs:
     - name: Refresh swagger doc
       shell: bash
       run: |
-        export PATH=$(go env GOPATH)/bin:$PATH
+        export GITHUB_PATH=$(go env GOPATH)/bin:$GITHUB_PATH
         go get -u github.com/swaggo/swag/cmd/swag
         swag init --md ./
 
