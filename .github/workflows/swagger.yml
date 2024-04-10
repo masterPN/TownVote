@@ -19,7 +19,7 @@ jobs:
     - name: Refresh swagger doc
       shell: bash
       run: |
-        go get -u github.com/swaggo/swag/cmd/swag
+        go get github.com/swaggo/swag/cmd/swag
         swag init --md ./
 
     - name: Update swagger resource
