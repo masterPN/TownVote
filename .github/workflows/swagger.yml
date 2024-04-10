@@ -19,9 +19,10 @@ jobs:
     - name: Refresh swagger doc
       shell: bash
       run: |
-        export PATH=$(which go)/bin:$PATH
         go get -u github.com/swaggo/swag/cmd/swag
         swag init --md ./
+      env:
+        GOPATH: ${{ runner.workspace }}
 
     - name: Update swagger resource
       uses: test-room-7/action-update-file@v1
