@@ -19,8 +19,9 @@ jobs:
     - name: Refresh swagger doc
       shell: bash
       run: |
-        go get github.com/swaggo/swag/cmd/swag
-        swag init --md ./
+        wget https://github.com/swaggo/swag/releases/download/v1.16.3/swag_1.16.3_Linux_amd64.tar.gz
+        tar xvzf swag_1.16.3_Linux_amd64.tar.gz
+        ./swag init --md ./
 
     - name: Update swagger resource
       uses: test-room-7/action-update-file@v1
